@@ -1,0 +1,7 @@
+{
+  "name": "docone-backend",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "author": "ShadowAdi",
+  "license": "MIT"
+}
