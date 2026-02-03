@@ -4,6 +4,11 @@
   "main": "src/index.ts",
   "author": "ShadowAdi",
   "license": "MIT",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.94.0",
     "bcrypt": "^6.0.0",
@@ -16,8 +21,11 @@
     "express-validator": "^7.3.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.11.0",
     "multer": "^2.0.2",
+    "pdf-parse": "^2.4.5",
     "postgres": "^3.4.8",
+    "pptxgenjs": "^4.0.1",
     "uuid": "^13.0.0",
     "winston": "^3.17.0"
   },
