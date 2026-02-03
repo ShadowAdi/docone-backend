@@ -1,5 +1,6 @@
 import { logger } from "../config/logger"
 import { AppError } from "./AppError"
+import { extractFromDocx } from "./extract-from-docx"
 
 export const ExtractedDocument = async (filePath: string) => {
     const extension = filePath.split(".").pop()?.toLowerCase()
@@ -7,7 +8,7 @@ export const ExtractedDocument = async (filePath: string) => {
         switch (extension) {
             case "docx":
                 logger.info(`File Type is doc`)
-                break;
+                return await extractFromDocx(filePath)
             case "ppt":
                 logger.info(`File Type is ppt`)
                 break;
