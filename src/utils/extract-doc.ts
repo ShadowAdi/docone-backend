@@ -24,8 +24,7 @@ export const ExtractedDocument = async (filePath: string) => {
                 throw new AppError(`Unsupported file type: ${extension}`, 500)
         }
     } catch (error) {
-        logger.error(`Failed to extract text from the doc: ${error}`)
-        console.error(`Failed to extract text from the doc: ${error}`)
-        throw new AppError(`Failed to extract text from the doc: ${error}`, 500)
+        logger.error(`Failed to extract document content: ${error instanceof Error ? error.message : String(error)}`);
+        throw error;
     }
 }

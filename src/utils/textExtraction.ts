@@ -4,13 +4,13 @@ import { ExtractedDocument } from "./extract-doc"
 
 export const TextExtraction=async (filePath:string)=>{
     try {
-        logger.info(`The Path of the file is: ${filePath}`)
-        console.info(`The Path of the file is: ${filePath}`)
-        const response=await ExtractedDocument(filePath)
-        console.log(response)
+        logger.info(`Processing file: ${filePath}`);
+        const response=await ExtractedDocument(filePath);
+        logger.info(`Successfully extracted text from: ${filePath}`);
+        return response;
     } catch (error) {
-        logger.error(`Failed To Extract Text from the document ${error}`)
-        console.error(`Failed To Extract Text from the document ${error}`)
-        throw new AppError(`Failed to Extract Text from the document: ${error}`,500)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error(`Text extraction failed for ${filePath}: ${errorMessage}`);
+        throw error instanceof AppError ? error : new AppError(`Failed to extract text: ${errorMessage}`, 500);
     }
 }

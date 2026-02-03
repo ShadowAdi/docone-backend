@@ -17,8 +17,8 @@ export const extractFromDoc = async (filePath: string) => {
         }))
 
     } catch (error) {
-        logger.error(`Faied to extract doc from the given file path: ${filePath}`)
-        console.error(`Faied to extract doc from the given file path: ${filePath}`)
-        throw new AppError(`Faied to extract doc from the given file path: ${filePath}`, 500)
+        const errorMessage = `Failed to extract from .doc file: ${filePath}`;
+        logger.error(errorMessage);
+        throw new AppError(errorMessage, 500);
     }
 }
