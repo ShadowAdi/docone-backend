@@ -26,3 +26,18 @@ export const createUser = async (data: InsertUser) => {
         throw new AppError(`Failed to Create user`, 500)
     }
 }
+
+export const getAllUsers = async () => {
+    try {
+        const users = await db.select().from(usersTable)
+        return {
+            "success": true,
+            "message": "Users retrieved successfully",
+            data: users
+        }
+    } catch (error) {
+        logger.error(`Failed to get users: ${error}`)
+        console.error(`Failed to get users: ${error}`)
+        throw new AppError(`Failed to get users`, 500)
+    }
+}
