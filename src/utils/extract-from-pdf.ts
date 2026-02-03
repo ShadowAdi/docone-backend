@@ -1,14 +1,15 @@
 import { logger } from "../config/logger"
 import { AppError } from "./AppError"
-import WordExtractor from "word-extractor";
-
+import {PDFParse} from "pdf-parse";
+import fs from "fs";
 
 export const extractFromPdf = async (filePath: string) => {
     try {
-        const extractor = new WordExtractor()
-        const extracted = await extractor.extract(filePath)
-        const text = extracted.getBody()
-        const lines = text.split("\n");
+        const parser = new PDFParse({url:filePath});
+        const result =await parser.getText();
+        
+        const lines = result.text.split("\n");
+        
         return lines.filter((line) => line.trim().length > 0).map((text, i) => ({
             id: `line_${i}`,
             text: text.trim(),
