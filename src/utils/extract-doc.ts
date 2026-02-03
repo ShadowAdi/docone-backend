@@ -3,6 +3,7 @@ import { AppError } from "./AppError"
 import { extractFromDoc } from "./extract-from-doc"
 import { extractFromDocx } from "./extract-from-docx"
 import { extractFromPdf } from "./extract-from-pdf"
+import { extractFromPptx } from "./extract-from-pptx"
 
 export const ExtractedDocument = async (filePath: string) => {
     const extension = filePath.split(".").pop()?.toLowerCase()
@@ -18,8 +19,9 @@ export const ExtractedDocument = async (filePath: string) => {
                 logger.info(`File Type is pdf`)
                 return await extractFromPdf(filePath)
             case 'ppt':
-                logger.info(`File Type is ppt`)
-                break;
+            case 'pptx':
+                logger.info(`File Type is ${extension}`)
+                return await extractFromPptx(filePath)
             default:
                 logger.error(`Unsupported file type: ${extension}`)
                 throw new AppError(`Unsupported file type: ${extension}`, 500)
