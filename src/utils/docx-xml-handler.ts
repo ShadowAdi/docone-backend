@@ -10,7 +10,7 @@ interface TextNode {
   xmlPath: string[]
 }
 
-interface DocContent {
+interface DocxContent {
   zip: JSZip;
   documentXML: any;
   headerXMLs: Map<string, any>;
@@ -52,18 +52,18 @@ export const loadDocx = async (filePath: string) => {
       }
     }
 
-    const footerXmls = new Map<string, any>();
+    const footerXMLs = new Map<string, any>();
     const footerFiles = Object.keys(zip.files).filter((name) =>
       name.startsWith("word/footer") && name.endsWith(".xml")
     );
     for (const footerFile of footerFiles) {
       const footerXmlString = await zip.file(footerFile)?.async("text");
       if (footerXmlString) {
-        footerXmls.set(footerFile, parser.parse(footerXmlString));
+        footerXMLs.set(footerFile, parser.parse(footerXmlString));
       }
     }
 
-    const textNodes = extractTextNodes(documentXML, headerXMLs, footerXmls);
+    const textNodes = extractTextNodes(documentXML, headerXMLs, footerXMLs);
 
     logger.info(`Loaded DOCX with ${textNodes.length} text nodes`);
 
@@ -71,7 +71,7 @@ export const loadDocx = async (filePath: string) => {
       zip,
       documentXML,
       headerXMLs,
-      footerXmls,
+      footerXMLs,
       textNodes,
     };
 
@@ -155,7 +155,7 @@ export const extractTextNodes = (
 }
 
 export const replaceTextInDocx = (
-  docxContent: DocContent,
+  docxContent: DocxContent,
   translations: Map<string, string>
 ) => {
   try {
@@ -215,7 +215,7 @@ const replaceTextInNode = async (node: any,
   }
 }
 
-export const saveDocx = async (docxContent: DocContent,
+export const saveDocx = async (docxContent: DocxContent,
   outputPath: string): Promise<void> => {
   try {
     const builder = new XMLBuilder(xmlOptions)
@@ -252,4 +252,28 @@ export const extractTextForTranslation = async (filePath: string) => {
     text: node.text,
     type: "text-run" as const,
   }));
+}
+
+export const translateAndSaveDocx = async (inputPath: string,
+  outputPath: string,
+  translateFn: (text: string) => string | Promise<string>): Promise<void> => {
+  try {
+    const docxContent = await loadDocx(inputPath)
+
+    const translations = new Map<string, string>()
+
+    for (const node of docxContent.textNodes) {
+      const translated = await translateFn(node.text)
+      translations.set(node.id, translated)
+    }
+
+    const updatedContent = replaceTextInDocx(docxContent, translations)
+
+    await saveDocx(updatedContent, outputPath)
+
+    logger.info(`Translation complete: ${inputPath} → ${outputPath}`);
+  } catch (error) {
+    logger.error(`Failed to translate DOCX: ${error instanceof Error ? error.message : String(error)}`);
+    throw new AppError(`Failed to translate DOCX: ${error instanceof Error ? error.message : String(error)}`, 500);
+  }
 }
