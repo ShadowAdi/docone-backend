@@ -55,13 +55,13 @@ import { extractFromDocument, translateAndSaveDocument } from "./utils/document-
 //   .catch((error) => console.log(`Failed to translate HTML:`, error));
 
 // Example 4: CSV file (.csv)
-translateAndSaveDocument(
-  "./src/data/test.csv",
-  "./src/data/test-translated.csv",
-  textTranslate
-)
-  .then(() => console.log("✅ CSV translation complete!"))
-  .catch((error) => console.log(`Failed to translate CSV:`, error));
+// translateAndSaveDocument(
+//   "./src/data/test.csv",
+//   "./src/data/test-translated.csv",
+//   textTranslate
+// )
+//   .then(() => console.log("✅ CSV translation complete!"))
+//   .catch((error) => console.log(`Failed to translate CSV:`, error));
 
 // Example 5: RTF file (.rtf)
 // translateAndSaveDocument(
@@ -82,13 +82,13 @@ translateAndSaveDocument(
 //   .catch((error) => console.log(`Failed to translate DOCX:`, error));
 
 // Example 7: PowerPoint (.pptx) - Preserves formatting!
-// translateAndSaveDocument(
-//   "./src/data/test.pptx",
-//   "./src/data/test-translated.pptx",
-//   textTranslate
-// )
-//   .then(() => console.log("✅ PPTX translation complete!"))
-//   .catch((error) => console.log(`Failed to translate PPTX:`, error));
+translateAndSaveDocument(
+  "./src/data/GoDis.pptx",
+  "./src/data/GoDis-translated.pptx",
+  textTranslate
+)
+  .then(() => console.log("✅ PPTX translation complete!"))
+  .catch((error) => console.log(`Failed to translate PPTX:`, error));
 
 // Example 8: PDF file (.pdf) - Requires ConvertAPI key
 // translateAndSaveDocument(
