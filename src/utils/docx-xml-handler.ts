@@ -26,7 +26,49 @@ const xmlOptions = {
   preserveOrder: false,
 };
 
-export const extractTextNodes =  (
+const extractTextFromNode = (node: any,
+  path: string[],
+  textNodes: TextNode[],
+  index: { value: number }): void => {
+  if (!node || typeof node !== "object") {
+    return
+  }
+
+  if (node["w:t"]) {
+    const textContent = node["w:t"];
+    if (typeof textContent === "string" && textContent.trim().length > 0) {
+      textNodes.push({
+        id: `t_${textNodes.length}`,
+        text: textContent,
+        xmlPath: [...path],
+      });
+    } else if (typeof textContent === "object" && textContent["#text"]) {
+      const text = textContent["#text"];
+      if (typeof text === "string" && text.trim().length > 0) {
+        textNodes.push({
+          id: `t_${textNodes.length}`,
+          text: text,
+          xmlPath: [...path],
+        });
+      }
+    }
+  }
+
+  for (const key in node) {
+    if (key === "@_" || key === "#text") continue;
+    const child = node[key]
+
+    if (Array.isArray(child)) {
+      child.forEach((item, idx) => {
+        extractTextFromNode(item, [...path, `${key}[${idx}]`], textNodes, index)
+      })
+    } else if (typeof child === "object") {
+      extractTextFromNode(child, [...path, key], textNodes, index);
+    }
+  }
+}
+
+export const extractTextNodes = (
   documentXML: any,
   headerXMLs: Map<string, any>,
   footerXMLs: Map<string, any>
@@ -34,22 +76,23 @@ export const extractTextNodes =  (
   const textNodes: TextNode[] = []
   const globalIndex = { value: 0 }
 
-  
+
   const body = documentXML?.["w:document"]?.["w.body"]
   if (body) {
-
+    extractTextFromNode(body, ["document", "body"], textNodes, globalIndex);
   }
 
   for (const [fileName, headerXML] of headerXMLs.entries()) {
     const header = headerXML?.["w:hdr"]
     if (header) {
-
+      extractTextFromNode(header, ["header", fileName], textNodes, globalIndex);
     }
   }
 
   for (const [fileName, footerXml] of footerXMLs.entries()) {
     const footer = footerXml?.["w:ftr"];
     if (footer) {
+      extractTextFromNode(footer, ["footer", fileName], textNodes, globalIndex);
     }
   }
 
