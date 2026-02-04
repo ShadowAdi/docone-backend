@@ -214,3 +214,32 @@ const replaceTextInNode = async (node: any,
     }
   }
 }
+
+export const saveDocx = async (docxContent: DocContent,
+  outputPath: string): Promise<void> => {
+  try {
+    const builder = new XMLBuilder(xmlOptions)
+
+    const documentXmlString = builder.build(docxContent.documentXML)
+    docxContent.zip.file("word/document.xml", documentXmlString);
+
+    for (const [fileName, headerXML] of docxContent.headerXMLs.entries()) {
+      const headerXMLString = builder.build(headerXML)
+      docxContent.zip.file(fileName, headerXMLString)
+    }
+    for (const [fileName, footerXml] of docxContent.footerXMLs.entries()) {
+      const footerXmlString = builder.build(footerXml);
+      docxContent.zip.file(fileName, footerXmlString);
+    }
+
+    const content = await docxContent.zip.generateAsync({
+      type: "nodebuffer",
+      compression: "DEFLATE"
+    })
+    await fs.writeFile(outputPath, content)
+    logger.info(`Saved translated DOCX to ${outputPath}`);
+  } catch (error) {
+    logger.error(`Failed to save DOCX: ${error instanceof Error ? error.message : String(error)}`);
+    throw new AppError(`Failed to save DOCX to ${outputPath}`, 500);
+  }
+}
