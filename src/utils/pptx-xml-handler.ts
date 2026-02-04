@@ -23,6 +23,8 @@ const xmlOptions = {
   textNodeName: "#text",
   format: true,
   preserveOrder: false,
+  ignoreDeclaration: false,
+  ignorePiTags: false,
 };
 
 export const loadPptx = async (filePath: string) => {
@@ -171,8 +173,16 @@ const replaceTextInNode = (
 
       if (typeof textContent === "string") {
         node["a:t"] = translatedText;
+        // Preserve xml:space="preserve" attribute if it exists
+        if (node["@_xml:space"]) {
+          node["@_xml:space"] = "preserve";
+        }
       } else if (typeof textContent === "object" && textContent["#text"]) {
         node["a:t"]["#text"] = translatedText;
+        // Preserve xml:space="preserve" attribute if it exists
+        if (textContent["@_xml:space"]) {
+          node["a:t"]["@_xml:space"] = "preserve";
+        }
       }
     }
   }
