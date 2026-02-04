@@ -132,7 +132,7 @@ export const extractTextNodes = (
   const globalIndex = { value: 0 }
 
 
-  const body = documentXML?.["w:document"]?.["w.body"]
+  const body = documentXML?.["w:document"]?.["w:body"]
   if (body) {
     extractTextFromNode(body, ["document", "body"], textNodes, globalIndex);
   }
