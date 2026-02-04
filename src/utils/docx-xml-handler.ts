@@ -26,6 +26,36 @@ const xmlOptions = {
   preserveOrder: false,
 };
 
+export const extractTextNodes =  (
+  documentXML: any,
+  headerXMLs: Map<string, any>,
+  footerXMLs: Map<string, any>
+): TextNode[] => {
+  const textNodes: TextNode[] = []
+  const globalIndex = { value: 0 }
+
+  
+  const body = documentXML?.["w:document"]?.["w.body"]
+  if (body) {
+
+  }
+
+  for (const [fileName, headerXML] of headerXMLs.entries()) {
+    const header = headerXML?.["w:hdr"]
+    if (header) {
+
+    }
+  }
+
+  for (const [fileName, footerXml] of footerXMLs.entries()) {
+    const footer = footerXml?.["w:ftr"];
+    if (footer) {
+    }
+  }
+
+  return textNodes
+}
+
 
 export const loadDocx = async (filePath: string) => {
   try {
