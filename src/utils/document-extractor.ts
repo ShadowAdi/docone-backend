@@ -3,6 +3,7 @@ import { AppError } from "./AppError";
 import { extractTextForTranslation as extractFromDocxXml, translateAndSaveDocx } from "./docx-xml-handler";
 import { extractTextForTranslation as extractFromPptxXml, translateAndSavePptx } from "./pptx-xml-handler";
 import { convertPdfToDocx, convertDocxToPdf, cleanupTempFile } from "./pdf-converter-convertapi";
+import * as fs from "fs/promises";
 import path from "path";
 
 /**
@@ -181,9 +182,17 @@ const translateAndSavePdfFile = async (
     await translateAndSaveDocx(tempDocxPath, translatedDocxPath, translateFn);
 
     // Step 3: Convert translated DOCX back to PDF
-    await convertDocxToPdf(translatedDocxPath, outputPath);
-
-    logger.info(`PDF translation complete: ${inputPath} → ${outputPath}`);
+    try {
+      await convertDocxToPdf(translatedDocxPath, outputPath);
+      logger.info(`PDF translation complete: ${inputPath} → ${outputPath}`);
+    } catch (pdfError) {
+      // If PDF conversion fails, just rename the DOCX to match the output path
+      logger.warn(`DOCX to PDF conversion failed, keeping DOCX format instead`);
+      const docxOutputPath = outputPath.replace(".pdf", ".docx");
+      await fs.rename(translatedDocxPath, docxOutputPath);
+      translatedDocxPath = null; // Don't cleanup since we renamed it
+      logger.info(`PDF translation complete (as DOCX): ${inputPath} → ${docxOutputPath}`);
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Failed to translate PDF: ${errorMessage}`);

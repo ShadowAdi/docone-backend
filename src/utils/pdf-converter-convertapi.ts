@@ -21,8 +21,8 @@ export const convertPdfToDocx = async (pdfPath: string): Promise<string> => {
     }
 
     const formData = new FormData();
-    const fileBuffer = await fs.readFile(pdfPath);
-    formData.append("File", fileBuffer, "input.pdf");
+    const pdfBuffer = await fs.readFile(pdfPath);
+    formData.append("File", pdfBuffer, "input.pdf");
 
     const response = await axios.post(
       `https://v2.convertapi.com/convert/pdf/to/docx?Secret=${CONVERT_API_SECRET_SANDBOX}`,
@@ -34,20 +34,23 @@ export const convertPdfToDocx = async (pdfPath: string): Promise<string> => {
       }
     );
 
-    logger.info(`ConvertAPI Response: ${JSON.stringify(response.data, null, 2)}`);
+    logger.info(`ConvertAPI Response: Files count: ${response.data.Files?.length}`);
 
     if (!response.data.Files || response.data.Files.length === 0) {
       throw new AppError("No file returned from ConvertAPI", 500);
     }
 
-    // Download the converted file
-    const fileUrl = response.data.Files[0].Url;
-    logger.info(`Downloading converted file from: ${fileUrl}`);
-    
-    const fileResponse = await axios.get(fileUrl, { responseType: "arraybuffer" });
+    // ConvertAPI returns base64 encoded file data, not a URL
+    const fileData = response.data.Files[0].FileData;
+    if (!fileData) {
+      throw new AppError("No FileData in ConvertAPI response", 500);
+    }
 
     const tempDocxPath = pdfPath.replace(".pdf", "-temp.docx");
-    await fs.writeFile(tempDocxPath, Buffer.from(fileResponse.data));
+    
+    // Decode base64 and save
+    const fileBuffer = Buffer.from(fileData, "base64");
+    await fs.writeFile(tempDocxPath, fileBuffer);
 
     logger.info(`PDF converted to DOCX: ${tempDocxPath}`);
     return tempDocxPath;
@@ -72,8 +75,8 @@ export const convertDocxToPdf = async (docxPath: string, outputPdfPath: string):
     }
 
     const formData = new FormData();
-    const fileBuffer = await fs.readFile(docxPath);
-    formData.append("File", fileBuffer, "input.docx");
+    const docxBuffer = await fs.readFile(docxPath);
+    formData.append("File", docxBuffer, "input.docx");
 
     const response = await axios.post(
       `https://v2.convertapi.com/convert/docx/to/pdf?Secret=${CONVERT_API_SECRET_SANDBOX}`,
@@ -89,11 +92,15 @@ export const convertDocxToPdf = async (docxPath: string, outputPdfPath: string):
       throw new AppError("No file returned from ConvertAPI", 500);
     }
 
-    // Download the converted file
-    const fileUrl = response.data.Files[0].Url;
-    const fileResponse = await axios.get(fileUrl, { responseType: "arraybuffer" });
+    // ConvertAPI returns base64 encoded file data, not a URL
+    const fileData = response.data.Files[0].FileData;
+    if (!fileData) {
+      throw new AppError("No FileData in ConvertAPI response", 500);
+    }
 
-    await fs.writeFile(outputPdfPath, Buffer.from(fileResponse.data));
+    // Decode base64 and save
+    const pdfBuffer = Buffer.from(fileData, "base64");
+    await fs.writeFile(outputPdfPath, pdfBuffer);
 
     logger.info(`DOCX converted to PDF: ${outputPdfPath}`);
   } catch (error: any) {
