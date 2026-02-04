@@ -91,11 +91,14 @@ const extractTextFromNode = (node: any,
 
   if (node["w:t"]) {
     const textContent = node["w:t"];
+    // Add w:t to the path for unique identification
+    const textPath = [...path, "w:t"];
+    
     if (typeof textContent === "string" && textContent.trim().length > 0) {
       textNodes.push({
         id: `t_${textNodes.length}`,
         text: textContent,
-        xmlPath: [...path],
+        xmlPath: textPath,
       });
     } else if (typeof textContent === "object" && textContent["#text"]) {
       const text = textContent["#text"];
@@ -103,7 +106,7 @@ const extractTextFromNode = (node: any,
         textNodes.push({
           id: `t_${textNodes.length}`,
           text: text,
-          xmlPath: [...path],
+          xmlPath: textPath,
         });
       }
     }
@@ -159,14 +162,23 @@ export const replaceTextInDocx = (
   translations: Map<string, string>
 ) => {
   try {
-    replaceTextInNode(docxContent.documentXML, translations, docxContent.textNodes)
+    const body = docxContent.documentXML?.["w:document"]?.["w:body"];
+    if (body) {
+      replaceTextInNode(body, translations, docxContent.textNodes, ["document", "body"]);
+    }
 
     for (const [fileName, headerXML] of docxContent.headerXMLs.entries()) {
-      replaceTextInNode(headerXML, translations, docxContent.textNodes)
+      const header = headerXML?.["w:hdr"];
+      if (header) {
+        replaceTextInNode(header, translations, docxContent.textNodes, ["header", fileName]);
+      }
     }
 
     for (const [fileName, footerXml] of docxContent.footerXMLs.entries()) {
-      replaceTextInNode(footerXml, translations, docxContent.textNodes);
+      const footer = footerXml?.["w:ftr"];
+      if (footer) {
+        replaceTextInNode(footer, translations, docxContent.textNodes, ["footer", fileName]);
+      }
     }
 
     logger.info(`Replaced ${translations.size} text nodes with translations`);
@@ -178,24 +190,23 @@ export const replaceTextInDocx = (
 }
 
 
-const replaceTextInNode = async (node: any,
+const replaceTextInNode = (node: any,
   translations: Map<string, string>,
-  textNodes: TextNode[]) => {
+  textNodes: TextNode[],
+  currentPath: string[] = []) => {
   if (!node || typeof node !== "object") return;
 
   if (node["w:t"]) {
-    const textContent = node["w:t"]
-    const matchingNode = textNodes.find((tn) => {
-      if (typeof textContent === "string") {
-        return tn.text === textContent
-      } else if (typeof textContent === "object" && textContent["#text"]) {
-        return tn.text === textContent["#text"];
-      }
-      return false
-    })
+    const textPath = [...currentPath, "w:t"];
+    const pathKey = textPath.join("/");
+    
+    // Find matching node by xmlPath instead of text content
+    const matchingNode = textNodes.find((tn) => tn.xmlPath.join("/") === pathKey);
 
     if (matchingNode && translations.has(matchingNode.id)) {
-      const translatedText = translations.get(matchingNode.id)
+      const translatedText = translations.get(matchingNode.id);
+      const textContent = node["w:t"];
+      
       if (typeof textContent === "string") {
         node["w:t"] = translatedText;
       } else if (typeof textContent === "object" && textContent["#text"]) {
@@ -206,11 +217,14 @@ const replaceTextInNode = async (node: any,
 
   for (const key in node) {
     if (key === "@_" || key === "#text") continue;
-    const child = node[key]
+    const child = node[key];
+    
     if (Array.isArray(child)) {
-      child.forEach((item) => replaceTextInNode(item, translations, textNodes));
+      child.forEach((item, idx) => {
+        replaceTextInNode(item, translations, textNodes, [...currentPath, `${key}[${idx}]`]);
+      });
     } else if (typeof child === "object") {
-      replaceTextInNode(child, translations, textNodes);
+      replaceTextInNode(child, translations, textNodes, [...currentPath, key]);
     }
   }
 }
