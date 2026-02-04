@@ -154,3 +154,63 @@ export const extractTextNodes = (
   return textNodes
 }
 
+export const replaceTextInDocx = (
+  docxContent: DocContent,
+  translations: Map<string, string>
+) => {
+  try {
+    replaceTextInNode(docxContent.documentXML, translations, docxContent.textNodes)
+
+    for (const [fileName, headerXML] of docxContent.headerXMLs.entries()) {
+      replaceTextInNode(headerXML, translations, docxContent.textNodes)
+    }
+
+    for (const [fileName, footerXml] of docxContent.footerXMLs.entries()) {
+      replaceTextInNode(footerXml, translations, docxContent.textNodes);
+    }
+
+    logger.info(`Replaced ${translations.size} text nodes with translations`);
+    return docxContent;
+  } catch (error) {
+    logger.error(`Failed to replace text: ${error instanceof Error ? error.message : String(error)}`);
+    throw new AppError("Failed to replace text in DOCX", 500);
+  }
+}
+
+
+const replaceTextInNode = async (node: any,
+  translations: Map<string, string>,
+  textNodes: TextNode[]) => {
+  if (!node || typeof node !== "object") return;
+
+  if (node["w:t"]) {
+    const textContent = node["w:t"]
+    const matchingNode = textNodes.find((tn) => {
+      if (typeof textContent === "string") {
+        return tn.text === textContent
+      } else if (typeof textContent === "object" && textContent["#text"]) {
+        return tn.text === textContent["#text"];
+      }
+      return false
+    })
+
+    if (matchingNode && translations.has(matchingNode.id)) {
+      const translatedText = translations.get(matchingNode.id)
+      if (typeof textContent === "string") {
+        node["w:t"] = translatedText;
+      } else if (typeof textContent === "object" && textContent["#text"]) {
+        node["w:t"]["#text"] = translatedText;
+      }
+    }
+  }
+
+  for (const key in node) {
+    if (key === "@_" || key === "#text") continue;
+    const child = node[key]
+    if (Array.isArray(child)) {
+      child.forEach((item) => replaceTextInNode(item, translations, textNodes));
+    } else if (typeof child === "object") {
+      replaceTextInNode(child, translations, textNodes);
+    }
+  }
+}
