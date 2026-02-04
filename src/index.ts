@@ -28,13 +28,13 @@ import { extractFromDocument, translateAndSaveDocument } from "./utils/document-
 // This is the complete workflow - extract, translate, and save in one step
 
 // Example 1: Text file (.txt)
-translateAndSaveDocument(
-  "./src/data/test.txt",
-  "./src/data/test-translated.txt",
-  textTranslate
-)
-  .then(() => console.log("✅ TXT translation complete!"))
-  .catch((error) => console.log(`Failed to translate TXT:`, error));
+// translateAndSaveDocument(
+//   "./src/data/test.txt",
+//   "./src/data/test-translated.txt",
+//   textTranslate
+// )
+//   .then(() => console.log("✅ TXT translation complete!"))
+//   .catch((error) => console.log(`Failed to translate TXT:`, error));
 
 // Example 2: Markdown file (.md)
 // translateAndSaveDocument(
@@ -55,13 +55,13 @@ translateAndSaveDocument(
 //   .catch((error) => console.log(`Failed to translate HTML:`, error));
 
 // Example 4: CSV file (.csv)
-// translateAndSaveDocument(
-//   "./src/data/test.csv",
-//   "./src/data/test-translated.csv",
-//   textTranslate
-// )
-//   .then(() => console.log("✅ CSV translation complete!"))
-//   .catch((error) => console.log(`Failed to translate CSV:`, error));
+translateAndSaveDocument(
+  "./src/data/test.csv",
+  "./src/data/test-translated.csv",
+  textTranslate
+)
+  .then(() => console.log("✅ CSV translation complete!"))
+  .catch((error) => console.log(`Failed to translate CSV:`, error));
 
 // Example 5: RTF file (.rtf)
 // translateAndSaveDocument(
