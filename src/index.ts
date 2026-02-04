@@ -13,15 +13,15 @@ import { extractFromDocument, translateAndSaveDocument } from "./utils/document-
 //     console.log(`Failed to extract text from the file:`, error);
 //   });
 
-// Option 2: Translate and save any document (currently only DOCX works)
+// Option 2: Translate and save any document (DOCX and PPTX work!)
 // Automatically detects format and preserves structure
 translateAndSaveDocument(
-  "./src/data/test.docx",
-  "./src/data/test-translated.docx",
+  "./src/data/test3.pptx",  // Change to .pptx to test PowerPoint
+  "./src/data/test3-translated.pptx",
   textTranslate
 )
   .then(() => {
-    console.log("✅ Translation complete! Check ./src/data/test-translated.docx");
+    console.log("✅ Translation complete! Check the output file");
   })
   .catch((error) => {
     console.log(`Failed to translate document:`, error);

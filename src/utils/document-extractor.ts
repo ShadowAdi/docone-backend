@@ -1,6 +1,7 @@
 import { logger } from "../config/logger";
 import { AppError } from "./AppError";
-import { extractTextForTranslation, translateAndSaveDocx } from "./docx-xml-handler";
+import { extractTextForTranslation as extractFromDocxXml, translateAndSaveDocx } from "./docx-xml-handler";
+import { extractTextForTranslation as extractFromPptxXml, translateAndSavePptx } from "./pptx-xml-handler";
 import path from "path";
 
 /**
@@ -19,8 +20,8 @@ export type TranslateFn = (text: string) => string | Promise<string>;
 
 /**
  * Extract text from any supported document format
- * Currently only DOCX is fully working with structure preservation
- * PDF, PPTX formats are not yet implemented
+ * DOCX and PPTX are fully working with structure preservation
+ * PDF and DOC formats are not yet implemented
  */
 export const extractFromDocument = async (
   filePath: string
@@ -68,7 +69,7 @@ const extractFromDocxFile = async (
   filePath: string
 ): Promise<ExtractedTextNode[]> => {
   logger.info(`Using DOCX extraction for: ${filePath}`);
-  return await extractTextForTranslation(filePath);
+  return await extractFromDocxXml(filePath);
 };
 
 /**
@@ -87,25 +88,21 @@ const extractFromPdfFile = async (
 };
 
 /**
- * Extract text from PPTX files (NOT WORKING YET)
- * Placeholder implementation - logs error and throws
+ * Extract text from PPTX files (WORKING)
+ * Uses XML-based extraction to preserve presentation structure
  */
 const extractFromPptxFile = async (
   filePath: string
 ): Promise<ExtractedTextNode[]> => {
-  logger.warn(`PPTX extraction is not yet implemented: ${filePath}`);
-  logger.error(`PPTX format (.pptx) is currently not supported`);
-  throw new AppError(
-    "PPTX extraction is not yet implemented. Please use DOCX format.",
-    501
-  );
+  logger.info(`Using PPTX extraction for: ${filePath}`);
+  return await extractFromPptxXml(filePath);
 };
 
 
 /**
  * Translate and save document to a new file
  * Automatically detects format and uses appropriate handler
- * Currently only DOCX is fully working with structure preservation
+ * DOCX and PPTX are fully working with structure preservation
  */
 export const translateAndSaveDocument = async (
   inputPath: string,
@@ -177,18 +174,14 @@ const translateAndSavePdfFile = async (
 };
 
 /**
- * Translate and save PPTX files (NOT WORKING YET)
- * Placeholder implementation - logs error and throws
+ * Translate and save PPTX files (WORKING)
+ * Preserves presentation structure, formatting, layouts, etc.
  */
 const translateAndSavePptxFile = async (
   inputPath: string,
   outputPath: string,
   translateFn: TranslateFn
 ): Promise<void> => {
-  logger.warn(`PPTX translation is not yet implemented: ${inputPath}`);
-  logger.error(`PPTX format (.pptx) translation is currently not supported`);
-  throw new AppError(
-    "PPTX translation is not yet implemented. Please use DOCX format.",
-    501
-  );
+  logger.info(`Using PPTX translation for: ${inputPath}`);
+  return await translateAndSavePptx(inputPath, outputPath, translateFn);
 };
