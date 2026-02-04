@@ -2,7 +2,8 @@ import { logger } from "../config/logger";
 import { AppError } from "./AppError";
 import { extractTextForTranslation as extractFromDocxXml, translateAndSaveDocx } from "./docx-xml-handler";
 import { extractTextForTranslation as extractFromPptxXml, translateAndSavePptx } from "./pptx-xml-handler";
-import { convertPdfToDocx, convertDocxToPdf, cleanupTempFile } from "./pdf-converter";
+import { convertPdfToDocxDirect } from "./pdf-converter-direct";
+import { convertDocxToPdf, cleanupTempFile } from "./pdf-converter";
 import path from "path";
 
 /**
@@ -167,14 +168,14 @@ const translateAndSavePdfFile = async (
   outputPath: string,
   translateFn: TranslateFn
 ): Promise<void> => {
-  logger.info(`Using PDF translation (via CloudConvert) for: ${inputPath}`);
+  logger.info(`Using PDF translation (via CloudConvert Direct API) for: ${inputPath}`);
   
   let tempDocxPath: string | null = null;
   let translatedDocxPath: string | null = null;
 
   try {
-    // Step 1: Convert PDF to DOCX
-    tempDocxPath = await convertPdfToDocx(inputPath);
+    // Step 1: Convert PDF to DOCX using direct API (bypasses SDK issues)
+    tempDocxPath = await convertPdfToDocxDirect(inputPath);
 
     // Step 2: Translate the DOCX
     translatedDocxPath = tempDocxPath.replace("-temp.docx", "-translated.docx");

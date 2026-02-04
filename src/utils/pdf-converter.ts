@@ -13,7 +13,8 @@ if (!CLOUD_CONVERT_API_KEY) {
 
 logger.info(`CloudConvert API Key loaded: ${CLOUD_CONVERT_API_KEY.substring(0, 10)}...`);
 
-const cloudConvert = new CloudConvert(CLOUD_CONVERT_API_KEY);
+// Try sandbox mode for free tier accounts
+const cloudConvert = new CloudConvert(CLOUD_CONVERT_API_KEY, true); // true = sandbox mode
 
 /**
  * Convert PDF to DOCX using CloudConvert API
@@ -27,6 +28,18 @@ export const convertPdfToDocx = async (pdfPath: string): Promise<string> => {
     if (!CLOUD_CONVERT_API_KEY || CLOUD_CONVERT_API_KEY.length < 10) {
       throw new AppError(
         "Invalid CloudConvert API key. Please check your .env file and ensure CLOUD_CONVERT_API_KEY is set correctly.",
+        500
+      );
+    }
+
+    // Test API connection first
+    try {
+      const user = await cloudConvert.users.me();
+      logger.info(`CloudConvert API connected successfully. Credits: ${user.credits}`);
+    } catch (authError) {
+      logger.error(`CloudConvert API authentication test failed: ${authError}`);
+      throw new AppError(
+        `CloudConvert API key is invalid or expired. Please check your API key at https://cloudconvert.com/dashboard/api/v2/keys`,
         500
       );
     }
@@ -78,10 +91,11 @@ export const convertPdfToDocx = async (pdfPath: string): Promise<string> => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Failed to convert PDF to DOCX: ${errorMessage}`);
+    logger.error(`Full error details: ${JSON.stringify(error, null, 2)}`);
     
     if (errorMessage.includes("Forbidden") || errorMessage.includes("401") || errorMessage.includes("403")) {
       throw new AppError(
-        `CloudConvert API authentication failed. Please verify your CLOUD_CONVERT_API_KEY in the .env file. Current key starts with: ${CLOUD_CONVERT_API_KEY?.substring(0, 10)}...`,
+        `CloudConvert API key doesn't have required permissions. Please create a new API key with these scopes enabled: task.read, task.write, job.read, job.write. Visit: https://cloudconvert.com/dashboard/api/v2/keys`,
         500
       );
     }
