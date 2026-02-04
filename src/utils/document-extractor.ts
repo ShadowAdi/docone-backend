@@ -2,7 +2,7 @@ import { logger } from "../config/logger";
 import { AppError } from "./AppError";
 import { extractTextForTranslation as extractFromDocxXml, translateAndSaveDocx } from "./docx-xml-handler";
 import { extractTextForTranslation as extractFromPptxXml, translateAndSavePptx } from "./pptx-xml-handler";
-import { convertPdfToDocx, convertDocxToPdf, cleanupTempFile } from "./pdf-converter-convertapi";
+import { convertPdfToDocx, convertDocxToPdf, cleanupTempFile } from "./pdf-converter-new";
 import * as fs from "fs/promises";
 import path from "path";
 
