@@ -2,6 +2,7 @@ import { logger } from "../config/logger";
 import { AppError } from "./AppError";
 import { extractTextForTranslation as extractFromDocxXml, translateAndSaveDocx } from "./docx-xml-handler";
 import { extractTextForTranslation as extractFromPptxXml, translateAndSavePptx } from "./pptx-xml-handler";
+import { convertPdfToDocx, convertDocxToPdf, cleanupTempFile } from "./pdf-converter";
 import path from "path";
 
 /**
@@ -21,7 +22,7 @@ export type TranslateFn = (text: string) => string | Promise<string>;
 /**
  * Extract text from any supported document format
  * DOCX and PPTX are fully working with structure preservation
- * PDF and DOC formats are not yet implemented
+ * PDF uses CloudConvert API for conversion
  */
 export const extractFromDocument = async (
   filePath: string
@@ -102,7 +103,8 @@ const extractFromPptxFile = async (
 /**
  * Translate and save document to a new file
  * Automatically detects format and uses appropriate handler
- * DOCX and PPTX are fully working with structure preservation
+ * DOCX and PPTX: Direct XML manipulation (preserves structure)
+ * PDF: CloudConvert API (PDF → DOCX → translate → PDF)
  */
 export const translateAndSaveDocument = async (
   inputPath: string,
@@ -157,20 +159,40 @@ const translateAndSaveDocxFile = async (
 };
 
 /**
- * Translate and save PDF files (NOT WORKING YET)
- * Placeholder implementation - logs error and throws
+ * Translate and save PDF files (WORKING via CloudConvert)
+ * Converts PDF → DOCX → Translate → PDF
  */
 const translateAndSavePdfFile = async (
   inputPath: string,
   outputPath: string,
   translateFn: TranslateFn
 ): Promise<void> => {
-  logger.warn(`PDF translation is not yet implemented: ${inputPath}`);
-  logger.error(`PDF format (.pdf) translation is currently not supported`);
-  throw new AppError(
-    "PDF translation is not yet implemented. Please use DOCX format.",
-    501
-  );
+  logger.info(`Using PDF translation (via CloudConvert) for: ${inputPath}`);
+  
+  let tempDocxPath: string | null = null;
+  let translatedDocxPath: string | null = null;
+
+  try {
+    // Step 1: Convert PDF to DOCX
+    tempDocxPath = await convertPdfToDocx(inputPath);
+
+    // Step 2: Translate the DOCX
+    translatedDocxPath = tempDocxPath.replace("-temp.docx", "-translated.docx");
+    await translateAndSaveDocx(tempDocxPath, translatedDocxPath, translateFn);
+
+    // Step 3: Convert translated DOCX back to PDF
+    await convertDocxToPdf(translatedDocxPath, outputPath);
+
+    logger.info(`PDF translation complete: ${inputPath} → ${outputPath}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Failed to translate PDF: ${errorMessage}`);
+    throw new AppError(`Failed to translate PDF: ${errorMessage}`, 500);
+  } finally {
+    // Cleanup temporary files
+    if (tempDocxPath) await cleanupTempFile(tempDocxPath);
+    if (translatedDocxPath) await cleanupTempFile(translatedDocxPath);
+  }
 };
 
 /**

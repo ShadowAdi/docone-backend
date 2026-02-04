@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.94.0",
+    "axios": "^1.13.4",
     "bcrypt": "^6.0.0",
+    "cloudconvert": "^3.0.0",
     "cors": "^2.8.5",
     "docx": "^9.5.1",
     "docx4js": "^3.3.0",

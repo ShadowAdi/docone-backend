@@ -16,7 +16,7 @@ import { extractFromDocument, translateAndSaveDocument } from "./utils/document-
 // Option 2: Translate and save any document (DOCX and PPTX work!)
 // Automatically detects format and preserves structure
 translateAndSaveDocument(
-  "./src/data/test3.pptx",  // Change to .pptx to test PowerPoint
+  "./src/data/test3.pptx",  // Supports: .docx, .pptx, .pdf
   "./src/data/test3-translated.pptx",
   textTranslate
 )
@@ -26,3 +26,16 @@ translateAndSaveDocument(
   .catch((error) => {
     console.log(`Failed to translate document:`, error);
   });
+
+// Example for PDF (uses CloudConvert API - only called during translation)
+// translateAndSaveDocument(
+//   "./src/data/sample.pdf",
+//   "./src/data/sample-translated.pdf",
+//   textTranslate
+// )
+//   .then(() => {
+//     console.log("✅ PDF Translation complete!");
+//   })
+//   .catch((error) => {
+//     console.log(`Failed to translate PDF:`, error);
+//   });
