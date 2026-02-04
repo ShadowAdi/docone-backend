@@ -1,6 +1,6 @@
 import { logger } from "../config/logger";
 import { AppError } from "./AppError";
-import { extractTextForTranslation } from "./docx-xml-handler";
+import { extractTextForTranslation, translateAndSaveDocx } from "./docx-xml-handler";
 import path from "path";
 
 /**
@@ -11,6 +11,11 @@ export interface ExtractedTextNode {
   text: string;
   type: "text-run" | "line";
 }
+
+/**
+ * Type for translation function
+ */
+export type TranslateFn = (text: string) => string | Promise<string>;
 
 /**
  * Extract text from any supported document format
@@ -110,6 +115,117 @@ const extractFromDocFile = async (
   logger.error(`DOC format (.doc) is currently not supported`);
   throw new AppError(
     "DOC extraction is not yet implemented. Please use DOCX format.",
+    501
+  );
+};
+
+/**
+ * Translate and save document to a new file
+ * Automatically detects format and uses appropriate handler
+ * Currently only DOCX is fully working with structure preservation
+ */
+export const translateAndSaveDocument = async (
+  inputPath: string,
+  outputPath: string,
+  translateFn: TranslateFn
+): Promise<void> => {
+  const extension = path.extname(inputPath).toLowerCase();
+
+  logger.info(`Translating document: ${inputPath} → ${outputPath} (${extension})`);
+
+  try {
+    switch (extension) {
+      case ".docx":
+        return await translateAndSaveDocxFile(inputPath, outputPath, translateFn);
+
+      case ".pdf":
+        return await translateAndSavePdfFile(inputPath, outputPath, translateFn);
+
+      case ".pptx":
+        return await translateAndSavePptxFile(inputPath, outputPath, translateFn);
+
+      case ".doc":
+        return await translateAndSaveDocFile(inputPath, outputPath, translateFn);
+
+      default:
+        throw new AppError(
+          `Unsupported file format: ${extension}. Supported formats: .docx, .pdf, .pptx, .doc`,
+          400
+        );
+    }
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Failed to translate ${inputPath}: ${errorMessage}`);
+    throw new AppError(
+      `Failed to translate and save document: ${errorMessage}`,
+      500
+    );
+  }
+};
+
+/**
+ * Translate and save DOCX files (WORKING)
+ * Preserves document structure, formatting, images, tables, etc.
+ */
+const translateAndSaveDocxFile = async (
+  inputPath: string,
+  outputPath: string,
+  translateFn: TranslateFn
+): Promise<void> => {
+  logger.info(`Using DOCX translation for: ${inputPath}`);
+  return await translateAndSaveDocx(inputPath, outputPath, translateFn);
+};
+
+/**
+ * Translate and save PDF files (NOT WORKING YET)
+ * Placeholder implementation - logs error and throws
+ */
+const translateAndSavePdfFile = async (
+  inputPath: string,
+  outputPath: string,
+  translateFn: TranslateFn
+): Promise<void> => {
+  logger.warn(`PDF translation is not yet implemented: ${inputPath}`);
+  logger.error(`PDF format (.pdf) translation is currently not supported`);
+  throw new AppError(
+    "PDF translation is not yet implemented. Please use DOCX format.",
+    501
+  );
+};
+
+/**
+ * Translate and save PPTX files (NOT WORKING YET)
+ * Placeholder implementation - logs error and throws
+ */
+const translateAndSavePptxFile = async (
+  inputPath: string,
+  outputPath: string,
+  translateFn: TranslateFn
+): Promise<void> => {
+  logger.warn(`PPTX translation is not yet implemented: ${inputPath}`);
+  logger.error(`PPTX format (.pptx) translation is currently not supported`);
+  throw new AppError(
+    "PPTX translation is not yet implemented. Please use DOCX format.",
+    501
+  );
+};
+
+/**
+ * Translate and save DOC files (NOT WORKING YET)
+ * Placeholder implementation - logs error and throws
+ */
+const translateAndSaveDocFile = async (
+  inputPath: string,
+  outputPath: string,
+  translateFn: TranslateFn
+): Promise<void> => {
+  logger.warn(`DOC translation is not yet implemented: ${inputPath}`);
+  logger.error(`DOC format (.doc) translation is currently not supported`);
+  throw new AppError(
+    "DOC translation is not yet implemented. Please use DOCX format.",
     501
   );
 };
