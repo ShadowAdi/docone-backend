@@ -1,27 +1,28 @@
-import WordExtractor from "word-extractor";
 import { logger } from "../config/logger";
 import { AppError } from "./AppError";
+import { extractTextForTranslation } from "./docx-xml-handler";
 
+/**
+ * Extract text from DOCX while preserving structure
+ * This uses XML manipulation to maintain layout, images, tables, and styles
+ */
 export const extractFromDocx = async (filePath: string) => {
   try {
-    const extractor = new WordExtractor();
-    const extracted = await extractor.extract(filePath);
-    const text = extracted.getBody();
-    const lines = text.split("\n");
-    return lines
-      .filter((line) => line.trim().length > 0)
-      .map((text, i) => ({
-        id: `line_${i}`,
-        text: text.trim(),
-        type: "line" as const,
-      }));
+    logger.info(`Extracting text from DOCX: ${filePath}`);
+    
+    // Use the new XML-based extraction that preserves structure
+    const textNodes = await extractTextForTranslation(filePath);
+    
+    logger.info(`Extracted ${textNodes.length} text nodes from DOCX`);
+    return textNodes;
   } catch (error) {
-    logger.error(`Faied to extract docx from the given file path: ${filePath}`);
+    logger.error(`Failed to extract docx from the given file path: ${filePath}`);
     console.error(
-      `Faied to extract docx from the given file path: ${filePath}`,
+      `Failed to extract docx from the given file path: ${filePath}`,
+      error
     );
     throw new AppError(
-      `Faied to extract docx from the given file path: ${filePath}`,
+      `Failed to extract docx from the given file path: ${filePath}`,
       500,
     );
   }
