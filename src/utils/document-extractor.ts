@@ -20,7 +20,7 @@ export type TranslateFn = (text: string) => string | Promise<string>;
 /**
  * Extract text from any supported document format
  * Currently only DOCX is fully working with structure preservation
- * PDF, PPTX, and DOC formats are not yet implemented
+ * PDF, PPTX formats are not yet implemented
  */
 export const extractFromDocument = async (
   filePath: string
@@ -40,12 +40,9 @@ export const extractFromDocument = async (
       case ".pptx":
         return await extractFromPptxFile(filePath);
 
-      case ".doc":
-        return await extractFromDocFile(filePath);
-
       default:
         throw new AppError(
-          `Unsupported file format: ${extension}. Supported formats: .docx, .pdf, .pptx, .doc`,
+          `Unsupported file format: ${extension}. Supported formats: .docx, .pdf, .pptx`,
           400
         );
     }
@@ -104,20 +101,6 @@ const extractFromPptxFile = async (
   );
 };
 
-/**
- * Extract text from DOC files (NOT WORKING YET)
- * Placeholder implementation - logs error and throws
- */
-const extractFromDocFile = async (
-  filePath: string
-): Promise<ExtractedTextNode[]> => {
-  logger.warn(`DOC extraction is not yet implemented: ${filePath}`);
-  logger.error(`DOC format (.doc) is currently not supported`);
-  throw new AppError(
-    "DOC extraction is not yet implemented. Please use DOCX format.",
-    501
-  );
-};
 
 /**
  * Translate and save document to a new file
@@ -143,9 +126,6 @@ export const translateAndSaveDocument = async (
 
       case ".pptx":
         return await translateAndSavePptxFile(inputPath, outputPath, translateFn);
-
-      case ".doc":
-        return await translateAndSaveDocFile(inputPath, outputPath, translateFn);
 
       default:
         throw new AppError(
@@ -209,23 +189,6 @@ const translateAndSavePptxFile = async (
   logger.error(`PPTX format (.pptx) translation is currently not supported`);
   throw new AppError(
     "PPTX translation is not yet implemented. Please use DOCX format.",
-    501
-  );
-};
-
-/**
- * Translate and save DOC files (NOT WORKING YET)
- * Placeholder implementation - logs error and throws
- */
-const translateAndSaveDocFile = async (
-  inputPath: string,
-  outputPath: string,
-  translateFn: TranslateFn
-): Promise<void> => {
-  logger.warn(`DOC translation is not yet implemented: ${inputPath}`);
-  logger.error(`DOC format (.doc) translation is currently not supported`);
-  throw new AppError(
-    "DOC translation is not yet implemented. Please use DOCX format.",
     501
   );
 };
