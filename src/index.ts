@@ -16,12 +16,12 @@ import { extractFromDocument, translateAndSaveDocument } from "./utils/document-
 // Option 2: Translate and save any document (currently only DOCX works)
 // Automatically detects format and preserves structure
 translateAndSaveDocument(
-  "./src/data/test.docx",
-  "./src/data/test-translated.docx",
+  "./src/data/test1.doc",
+  "./src/data/test1-translated.doc",
   textTranslate
 )
   .then(() => {
-    console.log("✅ Translation complete! Check ./src/data/test-translated.docx");
+    console.log("✅ Translation complete! Check ./src/data/test1-translated.doc");
   })
   .catch((error) => {
     console.log(`Failed to translate document:`, error);
