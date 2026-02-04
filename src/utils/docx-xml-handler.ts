@@ -243,3 +243,13 @@ export const saveDocx = async (docxContent: DocContent,
     throw new AppError(`Failed to save DOCX to ${outputPath}`, 500);
   }
 }
+
+export const extractTextForTranslation = async (filePath: string) => {
+  const docxContent = await loadDocx(filePath);
+
+  return docxContent.textNodes.map((node) => ({
+    id: node.id,
+    text: node.text,
+    type: "text-run" as const,
+  }));
+}
