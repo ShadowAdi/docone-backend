@@ -17,7 +17,7 @@ import { extractFromDocument, translateAndSaveDocument } from "./utils/document-
 // Automatically detects format and preserves structure
 translateAndSaveDocument(
   "./src/data/test2.pdf",  // Supports: .docx, .pptx, .pdf
-  "./src/data/test2-translated.pptx",
+  "./src/data/test2-translated.pdf",
   textTranslate
 )
   .then(() => {

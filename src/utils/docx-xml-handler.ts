@@ -24,6 +24,9 @@ const xmlOptions = {
   textNodeName: "#text",
   format: true,
   preserveOrder: false,
+  ignoreDeclaration: false,
+  suppressEmptyNode: false,
+  cdataPropName: "__cdata",
 };
 
 
@@ -232,17 +235,23 @@ const replaceTextInNode = (node: any,
 export const saveDocx = async (docxContent: DocxContent,
   outputPath: string): Promise<void> => {
   try {
-    const builder = new XMLBuilder(xmlOptions)
+    const builder = new XMLBuilder({
+      ...xmlOptions,
+      format: false, // Don't format to preserve exact structure
+    });
 
-    const documentXmlString = builder.build(docxContent.documentXML)
+    // Add XML declaration
+    const xmlDeclaration = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+    
+    const documentXmlString = xmlDeclaration + builder.build(docxContent.documentXML);
     docxContent.zip.file("word/document.xml", documentXmlString);
 
     for (const [fileName, headerXML] of docxContent.headerXMLs.entries()) {
-      const headerXMLString = builder.build(headerXML)
-      docxContent.zip.file(fileName, headerXMLString)
+      const headerXMLString = xmlDeclaration + builder.build(headerXML);
+      docxContent.zip.file(fileName, headerXMLString);
     }
     for (const [fileName, footerXml] of docxContent.footerXMLs.entries()) {
-      const footerXmlString = builder.build(footerXml);
+      const footerXmlString = xmlDeclaration + builder.build(footerXml);
       docxContent.zip.file(fileName, footerXmlString);
     }
 
