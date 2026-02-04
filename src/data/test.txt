@@ -1,0 +1,7 @@
+Hello World!
+
+This is a test text file.
+It contains multiple lines.
+The document extractor should be able to read this file and extract all the text content.
+
+Testing different paragraphs to ensure proper extraction.

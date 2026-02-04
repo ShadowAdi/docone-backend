@@ -3,6 +3,11 @@ import { AppError } from "./AppError";
 import { extractTextForTranslation as extractFromDocxXml, translateAndSaveDocx } from "./docx-xml-handler";
 import { extractTextForTranslation as extractFromPptxXml, translateAndSavePptx } from "./pptx-xml-handler";
 import { convertPdfToDocx, convertDocxToPdf, cleanupTempFile } from "./pdf-converter-new";
+import { extractFromTxt } from "./extract-from-txt";
+import { extractFromMarkdown } from "./extract-from-markdown";
+import { extractFromHtml } from "./extract-from-html";
+import { extractFromCsv } from "./extract-from-csv";
+import { extractFromRtf } from "./extract-from-rtf";
 import * as fs from "fs/promises";
 import path from "path";
 
@@ -43,9 +48,26 @@ export const extractFromDocument = async (
       case ".pptx":
         return await extractFromPptxFile(filePath);
 
+      case ".txt":
+        return await extractFromTxtFile(filePath);
+
+      case ".md":
+      case ".markdown":
+        return await extractFromMarkdownFile(filePath);
+
+      case ".html":
+      case ".htm":
+        return await extractFromHtmlFile(filePath);
+
+      case ".csv":
+        return await extractFromCsvFile(filePath);
+
+      case ".rtf":
+        return await extractFromRtfFile(filePath);
+
       default:
         throw new AppError(
-          `Unsupported file format: ${extension}. Supported formats: .docx, .pdf, .pptx`,
+          `Unsupported file format: ${extension}. Supported formats: .docx, .pdf, .pptx, .txt, .md, .html, .csv, .rtf`,
           400
         );
     }
@@ -127,9 +149,18 @@ export const translateAndSaveDocument = async (
       case ".pptx":
         return await translateAndSavePptxFile(inputPath, outputPath, translateFn);
 
+      case ".txt":
+      case ".md":
+      case ".markdown":
+      case ".html":
+      case ".htm":
+      case ".csv":
+      case ".rtf":
+        return await translateAndSaveTextFile(inputPath, outputPath, translateFn, extension);
+
       default:
         throw new AppError(
-          `Unsupported file format: ${extension}. Supported formats: .docx, .pdf, .pptx, .doc`,
+          `Unsupported file format: ${extension}. Supported formats: .docx, .pdf, .pptx, .txt, .md, .html, .csv, .rtf`,
           400
         );
     }
@@ -215,4 +246,96 @@ const translateAndSavePptxFile = async (
 ): Promise<void> => {
   logger.info(`Using PPTX translation for: ${inputPath}`);
   return await translateAndSavePptx(inputPath, outputPath, translateFn);
+};
+
+/**
+ * Translate and save text-based files (TXT, MD, HTML, CSV, RTF)
+ */
+const translateAndSaveTextFile = async (
+  inputPath: string,
+  outputPath: string,
+  translateFn: TranslateFn,
+  extension: string
+): Promise<void> => {
+  logger.info(`Translating text-based file: ${inputPath}`);
+  
+  try {
+    // Extract text nodes
+    const textNodes = await extractFromDocument(inputPath);
+    
+    // Translate all text nodes
+    const translatedTexts = await Promise.all(
+      textNodes.map(async (node) => {
+        const translated = await translateFn(node.text);
+        return typeof translated === 'string' ? translated : node.text;
+      })
+    );
+    
+    // Combine translated text
+    const translatedContent = translatedTexts.join("\n\n");
+    
+    // Write to output file
+    await fs.writeFile(outputPath, translatedContent, "utf-8");
+    
+    logger.info(`Text-based file translation complete: ${inputPath} → ${outputPath}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Failed to translate text-based file: ${errorMessage}`);
+    throw new AppError(`Failed to translate text-based file: ${errorMessage}`, 500);
+  }
+};
+
+/**
+ * Extract text from TXT files
+ */
+const extractFromTxtFile = async (
+  filePath: string
+): Promise<ExtractedTextNode[]> => {
+  logger.info(`Using TXT extraction for: ${filePath}`);
+  const text = await extractFromTxt(filePath);
+  return [{ id: "txt-1", text, type: "text-run" }];
+};
+
+/**
+ * Extract text from Markdown files
+ */
+const extractFromMarkdownFile = async (
+  filePath: string
+): Promise<ExtractedTextNode[]> => {
+  logger.info(`Using Markdown extraction for: ${filePath}`);
+  const text = await extractFromMarkdown(filePath, false);
+  return [{ id: "md-1", text, type: "text-run" }];
+};
+
+/**
+ * Extract text from HTML files
+ */
+const extractFromHtmlFile = async (
+  filePath: string
+): Promise<ExtractedTextNode[]> => {
+  logger.info(`Using HTML extraction for: ${filePath}`);
+  const text = await extractFromHtml(filePath);
+  return [{ id: "html-1", text, type: "text-run" }];
+};
+
+/**
+ * Extract text from CSV files
+ */
+const extractFromCsvFile = async (
+  filePath: string
+): Promise<ExtractedTextNode[]> => {
+  logger.info(`Using CSV extraction for: ${filePath}`);
+  const text = await extractFromCsv(filePath);
+  return [{ id: "csv-1", text, type: "text-run" }];
+};
+
+/**
+ * Extract text from RTF files
+ */
+const extractFromRtfFile = async (
+  filePath: string
+): Promise<ExtractedTextNode[]> => {
+  logger.info(`Using RTF extraction for: ${filePath}`);
+  const text = await extractFromRtf(filePath);
+  return [{ id: "rtf-1", text, type: "text-run" }];
 };
