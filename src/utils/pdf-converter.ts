@@ -8,9 +8,12 @@ import axios from "axios";
 
 if (!CLOUD_CONVERT_API_KEY) {
   logger.error("CLOUD_CONVERT_API_KEY is not set in environment variables");
+  throw new Error("CLOUD_CONVERT_API_KEY is required for PDF conversion. Please set it in your .env file");
 }
 
-const cloudConvert = new CloudConvert(CLOUD_CONVERT_API_KEY || "");
+logger.info(`CloudConvert API Key loaded: ${CLOUD_CONVERT_API_KEY.substring(0, 10)}...`);
+
+const cloudConvert = new CloudConvert(CLOUD_CONVERT_API_KEY);
 
 /**
  * Convert PDF to DOCX using CloudConvert API
@@ -19,6 +22,14 @@ const cloudConvert = new CloudConvert(CLOUD_CONVERT_API_KEY || "");
 export const convertPdfToDocx = async (pdfPath: string): Promise<string> => {
   try {
     logger.info(`Converting PDF to DOCX: ${pdfPath}`);
+
+    // Validate API key before making request
+    if (!CLOUD_CONVERT_API_KEY || CLOUD_CONVERT_API_KEY.length < 10) {
+      throw new AppError(
+        "Invalid CloudConvert API key. Please check your .env file and ensure CLOUD_CONVERT_API_KEY is set correctly.",
+        500
+      );
+    }
 
     const job = await cloudConvert.jobs.create({
       tasks: {
@@ -67,6 +78,14 @@ export const convertPdfToDocx = async (pdfPath: string): Promise<string> => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Failed to convert PDF to DOCX: ${errorMessage}`);
+    
+    if (errorMessage.includes("Forbidden") || errorMessage.includes("401") || errorMessage.includes("403")) {
+      throw new AppError(
+        `CloudConvert API authentication failed. Please verify your CLOUD_CONVERT_API_KEY in the .env file. Current key starts with: ${CLOUD_CONVERT_API_KEY?.substring(0, 10)}...`,
+        500
+      );
+    }
+    
     throw new AppError(`Failed to convert PDF to DOCX: ${errorMessage}`, 500);
   }
 };
