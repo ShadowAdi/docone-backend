@@ -2,8 +2,7 @@ import { logger } from "../config/logger";
 import { AppError } from "./AppError";
 import { extractTextForTranslation as extractFromDocxXml, translateAndSaveDocx } from "./docx-xml-handler";
 import { extractTextForTranslation as extractFromPptxXml, translateAndSavePptx } from "./pptx-xml-handler";
-import { convertPdfToDocxDirect } from "./pdf-converter-direct";
-import { convertDocxToPdf, cleanupTempFile } from "./pdf-converter";
+import { convertPdfToDocx, convertDocxToPdf, cleanupTempFile } from "./pdf-converter-convertapi";
 import path from "path";
 
 /**
@@ -23,7 +22,7 @@ export type TranslateFn = (text: string) => string | Promise<string>;
 /**
  * Extract text from any supported document format
  * DOCX and PPTX are fully working with structure preservation
- * PDF uses CloudConvert API for conversion
+ * PDF uses ConvertAPI for conversion
  */
 export const extractFromDocument = async (
   filePath: string
@@ -105,7 +104,7 @@ const extractFromPptxFile = async (
  * Translate and save document to a new file
  * Automatically detects format and uses appropriate handler
  * DOCX and PPTX: Direct XML manipulation (preserves structure)
- * PDF: CloudConvert API (PDF → DOCX → translate → PDF)
+ * PDF: ConvertAPI (PDF → DOCX → translate → PDF)
  */
 export const translateAndSaveDocument = async (
   inputPath: string,
@@ -160,7 +159,7 @@ const translateAndSaveDocxFile = async (
 };
 
 /**
- * Translate and save PDF files (WORKING via CloudConvert)
+ * Translate and save PDF files (WORKING via ConvertAPI)
  * Converts PDF → DOCX → Translate → PDF
  */
 const translateAndSavePdfFile = async (
@@ -168,14 +167,14 @@ const translateAndSavePdfFile = async (
   outputPath: string,
   translateFn: TranslateFn
 ): Promise<void> => {
-  logger.info(`Using PDF translation (via CloudConvert Direct API) for: ${inputPath}`);
+  logger.info(`Using PDF translation (via ConvertAPI) for: ${inputPath}`);
   
   let tempDocxPath: string | null = null;
   let translatedDocxPath: string | null = null;
 
   try {
-    // Step 1: Convert PDF to DOCX using direct API (bypasses SDK issues)
-    tempDocxPath = await convertPdfToDocxDirect(inputPath);
+    // Step 1: Convert PDF to DOCX
+    tempDocxPath = await convertPdfToDocx(inputPath);
 
     // Step 2: Translate the DOCX
     translatedDocxPath = tempDocxPath.replace("-temp.docx", "-translated.docx");

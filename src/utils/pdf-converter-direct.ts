@@ -1,7 +1,7 @@
 import axios from "axios";
 import { AppError } from "./AppError";
 import { logger } from "../config/logger";
-import { CLOUD_CONVERT_API_KEY } from "../config/dotenv";
+import { CONVERT_API_SECRET_SANDBOX } from "../config/dotenv";
 import * as fs from "fs/promises";
 import FormData from "form-data";
 
@@ -35,7 +35,7 @@ export const convertPdfToDocxDirect = async (pdfPath: string): Promise<string> =
       },
       {
         headers: {
-          Authorization: `Bearer ${CLOUD_CONVERT_API_KEY}`,
+          Authorization: `Bearer ${CONVERT_API_SECRET_SANDBOX}`,
           "Content-Type": "application/json",
         },
       }
@@ -67,7 +67,7 @@ export const convertPdfToDocxDirect = async (pdfPath: string): Promise<string> =
         `${CLOUDCONVERT_API_URL}/jobs/${job.id}`,
         {
           headers: {
-            Authorization: `Bearer ${CLOUD_CONVERT_API_KEY}`,
+            Authorization: `Bearer ${CONVERT_API_SECRET_SANDBOX}`,
           },
         }
       );
