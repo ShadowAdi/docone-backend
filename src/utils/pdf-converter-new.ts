@@ -1,13 +1,13 @@
 import ConvertAPI from "convertapi";
 import { AppError } from "./AppError";
 import { logger } from "../config/logger";
-import { CONVERT_API_SECRET } from "../config/dotenv";
+import { CONVERT_API_SECRET_SANDBOX } from "../config/dotenv";
 
-if (!CONVERT_API_SECRET) {
+if (!CONVERT_API_SECRET_SANDBOX) {
   logger.warn("CONVERT_API_SECRET is not set - PDF conversion will not work");
 }
 
-const convertapi = new ConvertAPI(CONVERT_API_SECRET || "");
+const convertapi = new ConvertAPI(CONVERT_API_SECRET_SANDBOX || "");
 
 /**
  * Convert PDF to DOCX using ConvertAPI official package
@@ -16,7 +16,7 @@ export const convertPdfToDocx = async (pdfPath: string): Promise<string> => {
   try {
     logger.info(`Converting PDF to DOCX using ConvertAPI: ${pdfPath}`);
 
-    if (!CONVERT_API_SECRET) {
+    if (!CONVERT_API_SECRET_SANDBOX) {
       throw new AppError("CONVERT_API_SECRET is not set in .env file", 500);
     }
 
@@ -40,7 +40,7 @@ export const convertDocxToPdf = async (docxPath: string, outputPdfPath: string):
   try {
     logger.info(`Converting DOCX to PDF using ConvertAPI: ${docxPath}`);
 
-    if (!CONVERT_API_SECRET) {
+    if (!CONVERT_API_SECRET_SANDBOX) {
       throw new AppError("CONVERT_API_SECRET is not set in .env file", 500);
     }
 
