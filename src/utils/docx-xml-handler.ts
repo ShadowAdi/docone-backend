@@ -136,6 +136,18 @@ export const loadDocx = async (filePath: string) => {
       }
     }
 
+     const textNodes = extractTextNodes(documentXML, headerXMLs, footerXmls);
+
+    logger.info(`Loaded DOCX with ${textNodes.length} text nodes`);
+
+    return {
+      zip,
+      documentXML,
+      headerXMLs,
+      footerXmls,
+      textNodes,
+    };
+
   } catch (error) {
     logger.error(`Failed to load DOCX: ${error instanceof Error ? error.message : String(error)}`);
     throw new AppError(`Failed to load DOCX from ${filePath}`, 500);
