@@ -34,12 +34,16 @@ export const convertPdfToDocx = async (pdfPath: string): Promise<string> => {
       }
     );
 
+    logger.info(`ConvertAPI Response: ${JSON.stringify(response.data, null, 2)}`);
+
     if (!response.data.Files || response.data.Files.length === 0) {
       throw new AppError("No file returned from ConvertAPI", 500);
     }
 
     // Download the converted file
     const fileUrl = response.data.Files[0].Url;
+    logger.info(`Downloading converted file from: ${fileUrl}`);
+    
     const fileResponse = await axios.get(fileUrl, { responseType: "arraybuffer" });
 
     const tempDocxPath = pdfPath.replace(".pdf", "-temp.docx");
